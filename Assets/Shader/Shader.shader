@@ -3,9 +3,6 @@ Shader "Playtika/MyUnlit"
     Properties
     {
         _Color ("Color", Color) = (1,1,1,1)
-        _Power ("Color Power", float) = 0.5
-        _MainText ("Main Texture", 2D) = "white"{}
-        _MyVector ("MyVector", Vector) = (0.2, 0.2, 0.2, 1)
     }
     SubShader
     {
@@ -15,7 +12,7 @@ Shader "Playtika/MyUnlit"
             #pragma vertex vert
             #pragma fragment frag
 
-            #include "UnityCG.cginc"
+            #include "UnityLightingCommon.cginc"
             
             float4 _Color;
 
@@ -28,21 +25,22 @@ Shader "Playtika/MyUnlit"
             struct v2f
             {
                 float4 vertex : SV_POSITION;
-                float4 color : COLOR;
+                float4 color: COLOR;
+                float3 normal : NORMAL;
             };
 
             v2f vert (appdata v)
             {
                 v2f o;
+                o.normal = v.normal;             
+                float3 lightDir = _WorldSpaceLightPos0.xyz;
+                float lightFallOff = max(0, dot(lightDir, o.normal));
+                o.color.rgba = _Color * lightFallOff;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.color.rgb = v.normal.xyz;
-                o.color.a = 1;
-
-                float3 light = normalize( _WorldSpaceLightPos0.xyz );
                 return o;
             }
 
-            fixed4 frag (v2f i) : SV_Target
+            fixed4 frag(v2f i) : SV_Target
             {
                 return i.color;
             }
